@@ -27,16 +27,6 @@ class Normalize(object):
         return {'image': img,
                 'label': mask}
 
-class DemoNormalize:
-    def __init__(self, mean=(0., 0., 0.), std=(1., 1., 1.)):
-        self.mean = mean
-        self.std = std
-
-    def __call__(self, img):
-        img /= 255.0
-        img -= self.mean
-        img /= self.std
-        return img
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
@@ -56,11 +46,6 @@ class ToTensor(object):
         return {'image': img,
                 'label': mask}
 
-class DemoToTensor:
-    def __call__(self, img):
-        img = img.transpose((2, 0, 1))
-        img = torch.from_numpy(img).float()
-        return img
 
 class RandomHorizontalFlip(object):
     def __call__(self, sample):
@@ -166,7 +151,7 @@ class FixScaleCrop(object):
 class DemoFixScaleCrop:
     def __init__(self, crop_size):
         self.crop_size = crop_size
-    
+
     def __call__(self, img):
         h, w, c = img.shape
         if w > h:
@@ -201,7 +186,7 @@ class FixedResize(object):
 class DemoFixedResize:
     def __init__(self, size):
         self.size = (size, size)
-    
+
     def __call__(self, img):
         img = resize(img, self.size, preserve_range=True)
         return img
