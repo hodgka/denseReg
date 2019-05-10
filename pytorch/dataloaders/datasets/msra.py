@@ -3,6 +3,7 @@ import numpy as np
 import scipy.misc as m
 from PIL import Image
 from torch.utils import data
+import torch
 import sys
 from random import randint
 import struct
@@ -77,7 +78,13 @@ class MSRADataset(data.Dataset):
             pose = pose.reshape((21, 3))
 
         img = self.convert_bin(bin_path)
-        sample = {'image': img, 'label': pose}
+
+        # config = np.array([self.cfg.fx/])
+        center_of_mass = self.center_of_mass(img, config)
+        sample = {'image': img,
+                  'label': pose,
+                  'center_of_mass': center_of_mass,
+                  'config', config}
 
         if self.split == 'train':
             return self.transform_tr(sample)
@@ -100,13 +107,31 @@ class MSRADataset(data.Dataset):
         np.copyto(depth_map_data[shape.top : shape.bottom, shape.left : shape.right], crop_depth_map_data)
         return depth_map_data
 
+    def center_of_mass(self, depth_map, config):
+        c_h, c_w = depth_map.size()
+        avg_u, avg_v = c_w / 2.0, c_h / 2.0
+        avg_d = depth_map[depth_map > 0].mean()
+        avg_d = np.max(avg_d, 200.0)
+        
+        avg_x = (avg_u-config[2])*avg_d/config[0]
+        avg_y = (avg_v-config[3])*avg_d/config[1]
+        avg_xyz = np.stack([avg_x, avg_y, avg_d], axis=0)
+        return avg_xyz
+        
+        
     def transform_tr(self, sample):
+        # composed_transforms = transforms.Compose([
+        #     tr.RandomHorizontalFlip(),
+        #     tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size, fill=255),
+        #     tr.RandomGaussianBlur(),
+        #     tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        #     tr.ToTensor()])
         composed_transforms = transforms.Compose([
-            tr.RandomHorizontalFlip(),
-            tr.RandomScaleCrop(base_size=self.args.base_size, crop_size=self.args.crop_size, fill=255),
-            tr.RandomGaussianBlur(),
-            tr.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-            tr.ToTensor()])
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation((-90, 90)),
+            transforms.RandomResizedCrop(),
+
+        ])
 
         return composed_transforms(sample)
 
