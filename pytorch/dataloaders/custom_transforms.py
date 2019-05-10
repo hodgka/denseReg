@@ -101,7 +101,7 @@ class RandomScaleCrop(object):
         self.scale = scale
         self.ratio = ratio
 
-        
+
     def __call__(self, sample):
         img = sample['image']
         label = sample['label']
@@ -190,13 +190,13 @@ class FixedResize(object):
 class transform:
     def __init__(self, degree=90):
         self.degree = degree
-    
+
     def __call__(self, sample):
         img = sample['image']
         pose = sample['label']
         config = sample['config']
         center_of_mass = sample['center_of_mass']
-    
+
         angle = random.uniform(-1 * self.degree, self.degree)
         rot_image = img.rotate(angle, Image.BILINEAR)
 
@@ -214,7 +214,7 @@ class transform:
 class XYZ2UVD:
     def __init__(self):
         pass
-    
+
     def __call__(self, sample):
         img = sample['image']
         label = sample['label']
